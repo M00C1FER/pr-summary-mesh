@@ -1,0 +1,50 @@
+name: 'pr-summary-mesh'
+description: 'Modular multi-LLM PR summarizer (any vendor via YAML/inline)'
+author: 'pr-summary-mesh contributors'
+branding: { icon: 'message-square', color: 'green' }
+
+inputs:
+  config:
+    description: 'YAML config file registering summarizer CLIs'
+    required: false
+  cli:
+    description: 'Inline summarizer (repeatable, name=cmd[,arg,...])'
+    required: false
+  mode:
+    description: 'merge | vote'
+    required: false
+    default: 'merge'
+  update-description:
+    description: 'Update the PR description body via gh pr edit'
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with: { python-version: '3.12' }
+    - name: Install pr-summary-mesh
+      shell: bash
+      run: pip install git+https://github.com/M00C1FER/pr-summary-mesh.git
+    - name: Run summarizer
+      id: run
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        ARGS=""
+        [ -n "${{ inputs.config }}" ] && ARGS="$ARGS --config ${{ inputs.config }}"
+        [ -n "${{ inputs.cli }}" ]    && ARGS="$ARGS --cli ${{ inputs.cli }}"
+        PR="${{ github.repository }}#${{ github.event.pull_request.number }}"
+        pr-summary-mesh $ARGS --pr "$PR" --mode "${{ inputs.mode }}" > /tmp/summary.md
+    - name: Update PR description
+      if: inputs.update-description == 'true' && github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # v0.1 emits the body to stdout; the actual PR-edit integration is
+        # planned for v0.2 (gh pr edit --body-file with marker-replacement).
+        echo "::notice::pr-summary-mesh produced summary; PR-edit integration is v0.2"
+        cat /tmp/summary.md

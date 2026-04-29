@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pr-summary-mesh"
+version = "0.1.0"
+description = "Modular multi-LLM pull-request summarizer. Register any vendor (Claude/Gemini/Copilot/Ollama/your own) via YAML or inline flags. CI-ready GitHub Action that updates the PR description and posts per-file walkthroughs."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = []
+keywords = ["pr", "code-review", "ci", "multi-llm", "modular", "ollama", "github-action"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = ["pyyaml>=6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+pr-summary-mesh = "pr_summary_mesh.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v"
