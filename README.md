@@ -1,6 +1,8 @@
 # pr-summary-mesh
 
-> **Modular multi-LLM pull-request summarizer.** Register *any* LLM CLI — Claude, Gemini, Copilot, Ollama, Mistral, your own SDK shim — via YAML or one-line flags. Aggregates findings, updates the PR description with a structured summary, posts per-file walkthroughs as a bot comment. CI-ready GitHub Action.
+> **Modular multi-LLM pull-request summarizer.** Register *any* command-line LLM via YAML or one-line flags — the orchestrator is vendor-neutral. Aggregates findings, updates the PR description with a structured summary, posts per-file walkthroughs as a bot comment. CI-ready GitHub Action.
+>
+> _Examples in this README mention specific vendors (Claude / Gemini / Copilot / Ollama) because they're the most common command-line LLMs at time of writing — they are illustrations, not requirements._
 
 [![CI](https://github.com/M00C1FER/pr-summary-mesh/actions/workflows/ci.yml/badge.svg)](https://github.com/M00C1FER/pr-summary-mesh/actions)
 ![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
