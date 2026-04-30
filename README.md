@@ -1,3 +1,9 @@
+> ⚠️ **DEPRECATED — superseded 2026-04-30 by [mesh-review](https://github.com/M00C1FER/mesh-review).**
+>
+> This repo was merged into `mesh-review`, which combines the review (consensus + Sigma falsification gate) and summary (PR description) capabilities behind a single shared CLI registry. One config, both subcommands.
+>
+> See the [mesh-review README](https://github.com/M00C1FER/mesh-review#readme) for migration guidance. The code below remains available for reference but is **no longer maintained** here.
+
 # pr-summary-mesh
 
 > **Modular multi-LLM pull-request summarizer.** Register *any* command-line LLM via YAML or one-line flags — the orchestrator is vendor-neutral. Aggregates findings, updates the PR description with a structured summary, posts per-file walkthroughs as a bot comment. CI-ready GitHub Action.
