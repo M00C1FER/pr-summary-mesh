@@ -2,7 +2,21 @@
 >
 > This repo was merged into `mesh-review`, which combines the review (consensus + Sigma falsification gate) and summary (PR description) capabilities behind a single shared CLI registry. One config, both subcommands.
 >
-> See the [mesh-review README](https://github.com/M00C1FER/mesh-review#readme) for migration guidance. The code below remains available for reference but is **no longer maintained** here.
+> See the [mesh-review README](https://github.com/M00C1FER/mesh-review#readme) for migration guidance.  The code below remains available for reference but is **no longer maintained** here.
+>
+> ### Migration notes
+>
+> | pr-summary-mesh | mesh-review equivalent |
+> |---|---|
+> | `pr-summary-mesh --pr repo#42 --mode merge` | `mesh-review summary --pr repo#42 --mode merge` |
+> | `pr-summary-mesh --diff-file changes.patch` | `mesh-review summary --diff-file changes.patch` |
+> | `pr-summary-mesh --config pr-summary.yaml` | `mesh-review summary --config triple-review.yaml` (same schema) |
+> | `pr-summary-mesh --cli name=cmd` | `mesh-review summary --cli name=cmd` |
+> | `pr-summary-mesh --list-clis` | `mesh-review summary --list-clis` |
+> | `pip install pr-summary-mesh` | `pip install mesh-review` |
+> | GitHub Action `M00C1FER/pr-summary-mesh@v0.1` | `M00C1FER/mesh-review@v1 with: subcommand: summary` |
+>
+> Your existing `pr-summary.yaml` / `triple-review.yaml` config files are **compatible without changes** — mesh-review uses the same `summarizers:` (or `clis:`) schema.
 
 # pr-summary-mesh
 
@@ -30,6 +44,20 @@ On every PR (or on demand):
 Existing PR summarizers (GitHub Copilot built-in, CodeRabbit AI) lock you to one vendor. **pr-summary-mesh** registers any number of LLMs through a vendor-neutral CLI registry. Same YAML format as `triple-review` — one config powers both your review gate and your summary layer.
 
 ## Quick start
+
+### Cross-platform install matrix
+
+| Platform | Tier | Install command |
+|---|---|---|
+| **Debian 12/13, Ubuntu 22.04/24.04** | 1 | `bash <(curl -sSf https://raw.githubusercontent.com/M00C1FER/pr-summary-mesh/main/install.sh)` |
+| **Arch / Manjaro** | 2 | same one-liner (wizard detects pacman) |
+| **Fedora / RHEL / Rocky / AlmaLinux** | 2 | same one-liner (wizard detects dnf) |
+| **Alpine** | best-effort | same one-liner (wizard detects apk); note glibc-linked LLM CLIs may need musl compat layer |
+| **WSL2** (Ubuntu base) | 1 | same as Ubuntu; no `/sys/firmware/efi` assumptions |
+| **Termux** (Android arm64) | best-effort | `pkg install python git && bash <(curl -sSf .../install.sh)` |
+| **macOS** | supported | same one-liner (wizard detects brew) |
+
+> **Termux note**: `sudo` is unavailable in Termux — the install wizard detects `$TERMUX_VERSION` and uses `pkg` without `sudo`.  Python venv works normally.  The `gh` CLI (`pkg install gh`) is available from Termux's community feed.
 
 ### Local CLI
 
@@ -161,7 +189,7 @@ pip install -e .[dev]
 pytest
 ```
 
-17 tests cover prompt parsing, merge/vote aggregation, PR-body rendering, YAML config loading (both `summarizers:` and `clis:` keys), inline flag parsing, parallel dispatch with stub runners, and the diff provider interface.
+21 tests cover prompt parsing, merge/vote aggregation, PR-body rendering, YAML config loading (both `summarizers:` and `clis:` keys), inline flag parsing, parallel dispatch with stub runners, diff provider interface, diff truncation, and merged `raw` field population.
 
 ## Roadmap
 

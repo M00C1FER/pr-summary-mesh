@@ -11,15 +11,16 @@ fail() { printf "  %s✗%s %s\n" "$C_RED" "$C_RESET" "$1" >&2; exit 1; }
 prompt_yn() { local q="$1" def="${2:-y}" ans; if [ "$def" = "y" ]; then read -r -p "  $q [Y/n]: " ans; ans="${ans:-y}"; else read -r -p "  $q [y/N]: " ans; ans="${ans:-n}"; fi; [[ "$ans" =~ ^[Yy] ]]; }
 prompt_default() { read -r -p "  $1 [$2]: " ans; echo "${ans:-$2}"; }
 
-detect_os() { OS_ID=unknown; OS_LIKE=""; OS_VERSION=""; OS_WSL=0; [ -f /etc/os-release ] && { . /etc/os-release; OS_ID="${ID:-}"; OS_LIKE="${ID_LIKE:-}"; OS_VERSION="${VERSION_ID:-}"; }; [ "$(uname)" = "Darwin" ] && OS_ID=macos; grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null && OS_WSL=1 || true; }
+detect_os() { OS_ID=unknown; OS_LIKE=""; OS_VERSION=""; OS_WSL=0; OS_TERMUX=0; [ -f /etc/os-release ] && { . /etc/os-release; OS_ID="${ID:-}"; OS_LIKE="${ID_LIKE:-}"; OS_VERSION="${VERSION_ID:-}"; }; [ "$(uname)" = "Darwin" ] && OS_ID=macos; grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null && OS_WSL=1 || true; [ -n "${TERMUX_VERSION:-}" ] && { OS_ID=termux; OS_TERMUX=1; }; }
 pkg_install() {
     case "$OS_ID" in
         debian|ubuntu) sudo apt-get update -qq && sudo apt-get install -y "$@";;
-        fedora|rhel|centos) sudo dnf install -y "$@";;
+        fedora|rhel|centos|rocky|almalinux) sudo dnf install -y "$@";;
         arch|manjaro) sudo pacman -S --noconfirm "$@";;
         alpine) sudo apk add --no-cache "$@";;
         opensuse*|sles) sudo zypper install -y "$@";;
         macos) brew install "$@";;
+        termux) pkg install -y "$@";;
         *) warn "unknown OS — install manually: $*"; return 1;;
     esac
 }
@@ -31,10 +32,12 @@ ensure_python() {
     if prompt_yn "Install Python 3.10+ via system package manager?"; then
         case "$OS_ID" in
             debian|ubuntu) pkg_install python3 python3-venv python3-pip;;
-            fedora|rhel|centos) pkg_install python3 python3-pip;;
+            fedora|rhel|centos|rocky|almalinux) pkg_install python3 python3-pip;;
             arch|manjaro) pkg_install python python-pip;;
             alpine) pkg_install python3 py3-pip;;
+            opensuse*|sles) pkg_install python3 python3-pip;;
             macos) pkg_install python@3.12;;
+            termux) pkg_install python;;
             *) fail "install Python 3.10+ manually then re-run";;
         esac
     else fail "Python 3.10+ required"; fi
@@ -43,12 +46,14 @@ ensure_python() {
 main() {
     say "pr-summary-mesh — install wizard"
     detect_os
-    info "OS: ${OS_ID}${OS_VERSION:+ $OS_VERSION}$([ "$OS_WSL" = 1 ] && echo ' (WSL2)')"
+    info "OS: ${OS_ID}${OS_VERSION:+ $OS_VERSION}$([ "$OS_WSL" = 1 ] && echo ' (WSL2)')$([ "$OS_TERMUX" = 1 ] && echo ' (Termux/Android)')"
 
     say ""; say "Step 1/3: Python 3.10+"; ensure_python
 
     say ""; say "Step 2/3: Install"
-    local INSTALL_HOME; INSTALL_HOME="$(prompt_default "Install root" "$HOME/.local/share/pr-summary-mesh")"
+    # On Termux, $HOME is /data/data/com.termux/files/home — honour it.
+    local default_install="$HOME/.local/share/pr-summary-mesh"
+    local INSTALL_HOME; INSTALL_HOME="$(prompt_default "Install root" "$default_install")"
     mkdir -p "$INSTALL_HOME"
     if [ -d "$INSTALL_HOME/.git" ]; then ( cd "$INSTALL_HOME" && git pull -q ); else git clone -q https://github.com/M00C1FER/pr-summary-mesh.git "$INSTALL_HOME"; fi
     cd "$INSTALL_HOME"

@@ -35,12 +35,14 @@ def merge_structural(docs: List[SummaryDoc]) -> SummaryDoc:
                 chunks.append(f"[{d.cli}] {value}")
         return "\n\n".join(chunks)
 
+    raw_parts = [f"=== [{d.cli}] ===\n{d.raw}" for d in valid if d.raw]
     merged = SummaryDoc(
         cli="merged",
         tldr=join("tldr"),
         files_changed=join("files_changed"),
         risk=join("risk"),
         test_plan=join("test_plan"),
+        raw="\n\n".join(raw_parts),
     )
     if errored:
         # Append degraded-vendors footnote

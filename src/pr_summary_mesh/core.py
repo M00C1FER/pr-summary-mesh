@@ -120,9 +120,24 @@ def default_configs() -> List[SummaryConfig]:
 
 
 def run_summary(diff: str, configs: Optional[List[SummaryConfig]] = None,
-                prompt: str = _DEFAULT_PROMPT) -> List[SummaryDoc]:
-    """Run the summary prompt across all configured CLIs in parallel."""
+                prompt: str = _DEFAULT_PROMPT,
+                max_diff_bytes: int = 100_000) -> List[SummaryDoc]:
+    """Run the summary prompt across all configured CLIs in parallel.
+
+    Args:
+        diff: Unified diff text to summarise.
+        configs: List of CLI configs; defaults to the bundled 3-CLI preset.
+        prompt: Prompt template; must contain ``{diff}`` placeholder.
+        max_diff_bytes: Truncate the diff to this many characters before
+            dispatching to any LLM CLI.  Prevents hitting context-window or
+            OS argument-length limits on very large PRs.  Set to 0 to disable.
+            Default: 100 000 characters (roughly 25 k tokens on average, but
+            token counts vary by model and tokenizer).
+    """
     cfgs = configs or default_configs()
+    if max_diff_bytes and len(diff) > max_diff_bytes:
+        truncated_notice = f"\n\n[diff truncated at {max_diff_bytes} chars; original was {len(diff)} chars]\n"
+        diff = diff[:max_diff_bytes] + truncated_notice
     out: List[SummaryDoc] = []
     with ThreadPoolExecutor(max_workers=len(cfgs)) as pool:
         futures = {}
