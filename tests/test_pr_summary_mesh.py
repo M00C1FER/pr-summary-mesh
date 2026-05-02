@@ -182,6 +182,61 @@ def test_run_summary_with_runners():
     assert {d.cli for d in docs} == {"a", "b", "c"}
 
 
+def test_run_summary_truncates_large_diff():
+    """run_summary must truncate diffs larger than max_diff_bytes."""
+    received: list[str] = []
+
+    def capturing_runner(diff, prompt):  # noqa: ARG001
+        received.append(diff)
+        return SummaryDoc(cli="spy", tldr="ok")
+
+    cfgs = [SummaryConfig(cli="spy", runner=capturing_runner)]
+    big_diff = "+" + "x" * 200_000
+    run_summary(big_diff, configs=cfgs, max_diff_bytes=1_000)
+    assert len(received) == 1
+    assert len(received[0]) < len(big_diff)
+    assert "truncated" in received[0]
+
+
+def test_run_summary_no_truncation_when_disabled():
+    """Setting max_diff_bytes=0 disables truncation."""
+    received: list[str] = []
+
+    def capturing_runner(diff, prompt):  # noqa: ARG001
+        received.append(diff)
+        return SummaryDoc(cli="spy", tldr="ok")
+
+    cfgs = [SummaryConfig(cli="spy", runner=capturing_runner)]
+    exact_diff = "+" + "z" * 200_000
+    run_summary(exact_diff, configs=cfgs, max_diff_bytes=0)
+    assert received[0] == exact_diff
+
+
+def test_merge_structural_populates_raw():
+    """merge_structural must populate the raw field for --render raw support."""
+    docs = [
+        SummaryDoc(cli="a", tldr="A summary", raw="TLDR: A summary\nRISK: low"),
+        SummaryDoc(cli="b", tldr="B summary", raw="TLDR: B summary\nRISK: medium"),
+    ]
+    merged = merge_structural(docs)
+    assert merged.raw, "merged.raw must not be empty"
+    assert "=== [a] ===" in merged.raw
+    assert "=== [b] ===" in merged.raw
+    assert "A summary" in merged.raw
+    assert "B summary" in merged.raw
+
+
+def test_merge_structural_raw_omits_empty_raws():
+    """Docs with empty raw should not add a section header to merged.raw."""
+    docs = [
+        SummaryDoc(cli="a", tldr="A", raw="TLDR: A"),
+        SummaryDoc(cli="b", tldr="B", raw=""),
+    ]
+    merged = merge_structural(docs)
+    assert "=== [a] ===" in merged.raw
+    assert "=== [b] ===" not in merged.raw
+
+
 # ── DiffProvider ──────────────────────────────────────────────────────────
 
 
