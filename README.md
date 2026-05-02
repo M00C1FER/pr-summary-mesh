@@ -189,7 +189,7 @@ pip install -e .[dev]
 pytest
 ```
 
-17 tests cover prompt parsing, merge/vote aggregation, PR-body rendering, YAML config loading (both `summarizers:` and `clis:` keys), inline flag parsing, parallel dispatch with stub runners, and the diff provider interface.  Additional tests cover diff truncation and merged `raw` field population (21 total).
+21 tests cover prompt parsing, merge/vote aggregation, PR-body rendering, YAML config loading (both `summarizers:` and `clis:` keys), inline flag parsing, parallel dispatch with stub runners, diff provider interface, diff truncation, and merged `raw` field population.
 
 ## Roadmap
 

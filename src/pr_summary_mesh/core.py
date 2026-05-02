@@ -131,7 +131,8 @@ def run_summary(diff: str, configs: Optional[List[SummaryConfig]] = None,
         max_diff_bytes: Truncate the diff to this many characters before
             dispatching to any LLM CLI.  Prevents hitting context-window or
             OS argument-length limits on very large PRs.  Set to 0 to disable.
-            Default: 100 000 characters (~25 k tokens for typical diffs).
+            Default: 100 000 characters (roughly 25 k tokens on average, but
+            token counts vary by model and tokenizer).
     """
     cfgs = configs or default_configs()
     if max_diff_bytes and len(diff) > max_diff_bytes:
